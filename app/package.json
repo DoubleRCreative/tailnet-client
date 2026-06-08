@@ -1,0 +1,12 @@
+{
+  "name": "tailscale-gui",
+  "version": "1.0.0",
+  "description": "Local web GUI for tailscale",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.0"
+  }
+}

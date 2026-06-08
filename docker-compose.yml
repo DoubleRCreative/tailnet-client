@@ -1,0 +1,25 @@
+services:
+  meshnet-client:
+    build: .
+    container_name: meshnet-client
+    hostname: meshnet-client
+    # Expose the GUI only on localhost — not to the wider network
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      # Persist tailscale state across restarts
+      - ./data:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # Optional: set your auth key here or enter it in the GUI
+      # TS_AUTHKEY: tskey-auth-xxxx
+      - GUI_PORT=3000
+      - TS_STATE_DIR=/var/lib/tailscale  # Tells Tailscale where to save state
+      - TS_USERSPACE=false 
+      - TS_LOGIN_SERVER=https://vpn.therameyhome.net
+      - TS_EXTRA_ARGS=--login-server=https://vpn.therameyhome.net    
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped

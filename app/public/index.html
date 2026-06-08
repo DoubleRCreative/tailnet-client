@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meshnet Client</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: #3b82f6;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    h1 { font-size: 1.4rem; font-weight: 600; white-space: nowrap; }
+    .subtitle { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3548;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #64748b;
+      flex-shrink: 0;
+    }
+    .dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e66; }
+    .dot.offline { background: #ef4444; }
+
+    .state-label { font-size: 1rem; font-weight: 600; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+    .info-grid .label { color: #64748b; }
+    .info-grid .value { color: #e2e8f0; font-family: monospace; word-break: break-all; }
+
+    .peers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .peer {
+      background: #151821;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .peer-info { flex: 1; min-width: 0; }
+    .peer-name { font-size: 0.875rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .peer-ip { font-size: 0.75rem; color: #64748b; font-family: monospace; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #2563eb; }
+    .btn-success { background: #22c55e; color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #16a34a; }
+    .btn-danger  { background: #ef4444; color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: #dc2626; }
+    .btn-ghost   { background: #2d3548; color: #e2e8f0; }
+    .btn-ghost:hover:not(:disabled)   { background: #374160; }
+    .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+    label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; margin-top: 12px; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #151821;
+      border: 1px solid #2d3548;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #e2e8f0;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    input:focus { border-color: #3b82f6; }
+
+    .toggles { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-row span { font-size: 0.85rem; }
+
+    input[type="checkbox"] {
+      width: 36px; height: 20px;
+      appearance: none;
+      background: #2d3548;
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: left 0.2s;
+    }
+    input[type="checkbox"]:checked { background: #3b82f6; }
+    input[type="checkbox"]:checked::before { left: 18px; }
+
+    .login-server-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #151821;
+      border: 1px solid #2d3548;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: #64748b;
+      margin-bottom: 16px;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty { color: #4a5568; font-size: 0.85rem; text-align: center; padding: 20px 0; }
+
+    .hidden { display: none !important; }
+
+    .log-panel {
+      margin-top: 20px;
+    }
+
+    .log-panel h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-panel .log-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    .log-panel pre {
+      background: #151821;
+      border: 1px solid #2d3548;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.78rem;
+      font-family: monospace;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #94a3b8;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+
+    .log-panel pre a { color: #3b82f6; text-decoration: underline; word-break: break-all; }
+
+    .log-panel.collapsed { padding-bottom: 8px; }
+    .log-panel.collapsed pre { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+
+<header>
+  <div class="header-left">
+    <div class="logo">🔒</div>
+    <div>
+      <h1>Meshnet Client</h1>
+      <div class="subtitle" id="versionBadge">Loading…</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-success hidden" id="loginBtn" onclick="doLogin()">⇒ Login</button>
+    <button class="btn hidden" id="actionBtn"></button>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- Status Card -->
+  <div class="card">
+    <h2>● Status</h2>
+    <div class="status-row">
+      <div class="dot" id="statusDot"></div>
+      <div>
+        <div class="state-label" id="stateLabel">—</div>
+      </div>
+    </div>
+    <div class="info-grid" id="selfInfo">
+      <span class="label">Network</span>
+      <span class="value" id="networkVal">—</span>
+      <span class="label">Hostname</span>
+      <span class="value" id="hostnameVal">—</span>
+      <span class="label">Node Name</span>
+      <span class="value" id="nodeNameVal">—</span>
+      <span class="label">Node ID</span>
+      <span class="value" id="nodeIdVal">—</span>
+      <span class="label">IPs</span>
+      <span class="value" id="ipVal">—</span>
+    </div>
+  </div>
+
+  <!-- Controls Card -->
+  <div class="card">
+    <h2>⚙ Controls</h2>
+
+    <div id="serverUrlGroup" style="display:none">
+      <label>Server URL</label>
+      <input type="text" id="serverUrl" readonly />
+    </div>
+
+    <label>Auth Key</label>
+    <input type="password" id="authkey" placeholder="tskey-auth-…" />
+
+    <div class="toggles">
+      <div class="toggle-row">
+        <span>Shields Up</span>
+        <input type="checkbox" id="shields" />
+      </div>
+      <div class="toggle-row">
+        <span>Advertise as Exit Node</span>
+        <input type="checkbox" id="exitNode" />
+      </div>
+      <div class="toggle-row">
+        <span>Advertise Local LAN (192.168.0.0/16)</span>
+        <input type="checkbox" id="lanAccess" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Peers Card -->
+  <div class="card">
+    <h2>◈ Peers</h2>
+    <div class="peers-list" id="peersList">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="card log-panel" id="logPanel">
+  <h2>
+    📋 Logs
+    <span class="log-actions">
+      <button class="btn btn-ghost btn-sm" onclick="clearLogs()">Clear</button>
+      <button class="btn btn-ghost btn-sm" id="hideLogsBtn" onclick="toggleLogs()">Hide</button>
+    </span>
+  </h2>
+  <pre id="logOutput"></pre>
+</div>
+
+<script>
+  let logsHidden = false;
+
+  function log(msg) {
+    const pre = document.getElementById("logOutput");
+    const panel = document.getElementById("logPanel");
+    panel.classList.remove("hidden");
+    pre.textContent += msg + "\n";
+    pre.scrollTop = pre.scrollHeight;
+  }
+
+  function logHtml(html) {
+    const pre = document.getElementById("logOutput");
+    const panel = document.getElementById("logPanel");
+    panel.classList.remove("hidden");
+    pre.innerHTML += html;
+    pre.scrollTop = pre.scrollHeight;
+  }
+
+  function clearLogs() {
+    document.getElementById("logOutput").textContent = "";
+  }
+
+  function toggleLogs() {
+    const panel = document.getElementById("logPanel");
+    const btn = document.getElementById("hideLogsBtn");
+    logsHidden = !logsHidden;
+    panel.classList.toggle("collapsed", logsHidden);
+    btn.textContent = logsHidden ? "Show" : "Hide";
+  }
+
+  async function api(method, path, body) {
+    const opts = { method, headers: { "Content-Type": "application/json" } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(path, opts);
+    return r.json();
+  }
+
+  async function loadConfig() {
+    try {
+      const { loginServer } = await api("GET", "/api/config");
+      if (loginServer) {
+        document.getElementById("serverUrlGroup").style.display = "";
+        document.getElementById("serverUrl").value = loginServer;
+        log("Using login server: " + loginServer);
+      }
+    } catch (e) {}
+  }
+
+  function updateActionBtn(state) {
+    const actionBtn = document.getElementById("actionBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const isAuthed = state === "Running" || state === "Stopped";
+    const isRunning = state === "Running";
+
+    loginBtn.classList.toggle("hidden", isAuthed);
+    actionBtn.classList.toggle("hidden", !isAuthed);
+    if (isAuthed) {
+      actionBtn.textContent = isRunning ? "■ Disconnect" : "▶ Connect";
+      actionBtn.className = "btn " + (isRunning ? "btn-danger" : "btn-primary");
+      actionBtn.onclick = isRunning ? doDown : doUp;
+    }
+  }
+
+  async function loadStatus() {
+    const dot = document.getElementById("statusDot");
+    const stateLabel = document.getElementById("stateLabel");
+    const hostnameVal = document.getElementById("hostnameVal");
+    const nodeNameVal = document.getElementById("nodeNameVal");
+    const nodeIdVal = document.getElementById("nodeIdVal");
+    const ipVal = document.getElementById("ipVal");
+    const networkVal = document.getElementById("networkVal");
+    const peersList = document.getElementById("peersList");
+
+    try {
+      const data = await api("GET", "/api/status");
+      const state = data.BackendState || "Unknown";
+      const online = state === "Running";
+
+      dot.className = "dot " + (online ? "online" : "offline");
+      stateLabel.textContent = state;
+
+      const self = data.Self;
+      const selfUser = data.User?.[data.Self?.UserID];
+      networkVal.textContent = selfUser?.DisplayName || "—";
+      hostnameVal.textContent = self?.HostName || "—";
+      nodeNameVal.textContent = self?.DNSName || "—";
+      nodeIdVal.textContent = self?.ID || "—";
+      ipVal.textContent = self ? (self.TailscaleIPs || []).join(", ") : "—";
+
+      updateActionBtn(state);
+
+      const allowedIPs = self?.AllowedIPs || [];
+      document.getElementById("exitNode").checked = allowedIPs.includes("0.0.0.0/0") || allowedIPs.includes("::/0");
+      document.getElementById("lanAccess").checked = allowedIPs.includes("192.168.0.0/16");
+
+      const selfUserID = data.Self?.UserID;
+      const allPeers = Object.values(data.Peer || {});
+      const peers = selfUserID
+        ? allPeers.filter(p => String(p.UserID) === String(selfUserID))
+        : allPeers;
+      if (!peers.length) {
+        peersList.innerHTML = '<div class="empty">No peers found</div>';
+      } else {
+        peersList.innerHTML = peers.map(p => {
+          const ips = (p.TailscaleIPs || []).join(", ");
+          return `
+            <div class="peer">
+              <div class="dot ${p.Online ? "online" : ""}"></div>
+              <div class="peer-info">
+                <div class="peer-name">${esc(p.HostName || p.DNSName || "unknown")}</div>
+                <div class="peer-ip">${esc(ips)}</div>
+              </div>
+            </div>`;
+        }).join("");
+      }
+    } catch (e) {
+      stateLabel.textContent = "Error";
+      dot.className = "dot offline";
+      peersList.innerHTML = '<div class="empty">Failed to load status</div>';
+    }
+  }
+
+  async function loadVersion() {
+    try {
+      const data = await api("GET", "/api/version");
+      document.getElementById("versionBadge").textContent = data.version?.split("\n")[0] || "";
+    } catch (e) {}
+  }
+
+  function doLogin() {
+    const btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ Connecting…";
+    log("Contacting login server…");
+
+    let urlOpened = false;
+    const URL_RE = /https?:\/\/[^\s&]+/;
+
+    fetch("/api/login", { method: "POST" }).then(response => {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      function processChunk({ done, value }) {
+        if (done) {
+          btn.disabled = false;
+          btn.textContent = "⇒ Login";
+          log("[process exited]");
+          setTimeout(loadStatus, 1500);
+          return;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const text = JSON.parse(line.slice(6));
+              if (!urlOpened) {
+                const match = text.match(URL_RE);
+                if (match) {
+                  window.open(match[0], "_blank");
+                  urlOpened = true;
+                }
+              }
+              const escaped = text
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+              const linked = escaped.replace(
+                /(https?:\/\/[^\s&]+)/g,
+                '<a href="$1" target="_blank" rel="noopener" style="color:#3b82f6">$1</a>'
+              );
+              logHtml(linked);
+            } catch (e) {}
+          }
+        }
+
+        return reader.read().then(processChunk);
+      }
+
+      reader.read().then(processChunk);
+    }).catch(e => {
+      log("Error: " + e.message);
+      btn.disabled = false;
+      btn.textContent = "⇒ Login";
+    });
+  }
+
+  async function doUp() {
+    log("Connecting…");
+    const body = {};
+    const authkey = document.getElementById("authkey").value.trim();
+    if (authkey) body.authkey = authkey;
+    body.shields = document.getElementById("shields").checked;
+    body.exitNode = document.getElementById("exitNode").checked;
+    body.lanAccess = document.getElementById("lanAccess").checked;
+    const data = await api("POST", "/api/up", body);
+    log(data.stdout || data.stderr || data.error || JSON.stringify(data));
+    setTimeout(loadStatus, 1500);
+  }
+
+  async function doDown() {
+    log("Disconnecting…");
+    const data = await api("POST", "/api/down");
+    log(data.stdout || data.stderr || data.error || "Done");
+    setTimeout(loadStatus, 1000);
+  }
+
+  async function doLogout() {
+    if (!confirm("Log out of Tailscale?")) return;
+    log("Logging out…");
+    const data = await api("POST", "/api/logout");
+    log(data.stdout || data.stderr || data.error || "Done");
+    setTimeout(loadStatus, 1000);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  loadConfig();
+  loadVersion();
+  loadStatus();
+  setInterval(loadStatus, 15000);
+</script>
+</div>
+</body>
+</html>
