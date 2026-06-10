@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watchEffect, onMounted } from 'vue'
 import { useStatus } from '@/composables/useStatus'
 import { useApi } from '@/composables/useApi'
 import { useLog } from '@/composables/useLog'
@@ -38,7 +38,8 @@ const isRunning = computed(() => status.value?.BackendState === 'Running')
 const isAuthed = computed(() => isRunning.value || status.value?.BackendState === 'Stopped')
 const loginServer = computed(() => config.value?.loginServer ?? null)
 
-watch(() => status.value?.Self?.AllowedIPs, (ips) => {
+watchEffect(() => {
+  const ips = status.value?.Self?.AllowedIPs
   if (ips) {
     exitNode.value = ips.includes('0.0.0.0/0') || ips.includes('::/0')
     lanAccess.value = ips.includes('192.168.0.0/16')

@@ -37,15 +37,15 @@ const emit = defineEmits<{
     <div class="space-y-4 pt-2">
       <div class="flex items-center justify-between">
         <Label for="shields">Shields Up</Label>
-        <Switch id="shields" :checked="shields" @update:checked="emit('update:shields', $event as boolean)" />
+        <Switch id="shields" :model-value="shields" @update:model-value="emit('update:shields', $event as boolean)" />
       </div>
       <div class="flex items-center justify-between">
         <Label for="exitNode">Advertise as Exit Node</Label>
-        <Switch id="exitNode" :checked="exitNode" @update:checked="emit('update:exitNode', $event as boolean)" />
+        <Switch id="exitNode" :model-value="exitNode" @update:model-value="emit('update:exitNode', $event as boolean)" />
       </div>
       <div class="flex items-center justify-between">
         <Label for="lanAccess">Advertise Local LAN (192.168.0.0/16)</Label>
-        <Switch id="lanAccess" :checked="lanAccess" @update:checked="emit('update:lanAccess', $event as boolean)" />
+        <Switch id="lanAccess" :model-value="lanAccess" @update:model-value="emit('update:lanAccess', $event as boolean)" />
       </div>
     </div>
   </div>

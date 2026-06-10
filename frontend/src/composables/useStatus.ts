@@ -11,6 +11,7 @@ export interface SelfInfo {
 }
 
 export interface PeerInfo {
+  Name: string
   HostName: string
   DNSName: string
   TailscaleIPs: string[]

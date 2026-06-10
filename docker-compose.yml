@@ -5,7 +5,7 @@ services:
     hostname: meshnet-client
     # Expose the GUI only on localhost — not to the wider network
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     volumes:
       # Persist tailscale state across restarts
       - ./data:/var/lib/tailscale

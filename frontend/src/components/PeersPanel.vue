@@ -21,7 +21,7 @@ defineProps<{
         :class="peer.Online ? 'bg-green-500' : 'bg-muted-foreground'"
       />
       <div class="min-w-0 flex-1">
-        <div class="text-sm font-medium truncate">{{ peer.HostName || peer.DNSName || 'unknown' }}</div>
+        <div class="text-sm font-medium truncate">{{ peer.Name || peer.HostName || 'unknown' }}</div>
         <div class="text-xs text-muted-foreground font-mono">{{ (peer.TailscaleIPs || []).join(', ') }}</div>
       </div>
     </div>
