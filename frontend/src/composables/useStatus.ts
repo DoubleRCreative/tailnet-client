@@ -11,7 +11,6 @@ export interface SelfInfo {
 }
 
 export interface PeerInfo {
-  Name: string
   HostName: string
   DNSName: string
   TailscaleIPs: string[]
@@ -25,6 +24,7 @@ export interface UserInfo {
 
 export interface TailscaleStatus {
   BackendState: string
+  MagicDNSSuffix: string
   Self?: SelfInfo
   User?: Record<string, UserInfo>
   Peer?: Record<string, PeerInfo>

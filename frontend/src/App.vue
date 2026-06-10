@@ -233,7 +233,7 @@ async function doLogout() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <PeersPanel :peers="peers" />
+            <PeersPanel :peers="peers" :magic-dns-suffix="status?.MagicDNSSuffix ?? ''" />
           </CardContent>
         </Card>
       </div>
