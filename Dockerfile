@@ -1,25 +1,33 @@
+# Stage 1: Build Vue frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /build
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Final image
 FROM tailscale/tailscale:latest
 
-# Install Node.js and supervisord
 RUN apk add --no-cache nodejs npm supervisor
 
 WORKDIR /app
 
-# Copy package files and install deps
+# Backend dependencies
 COPY app/package*.json ./
 RUN npm install --omit=dev
 
-# Copy the web app
+# Backend application
 COPY app/ ./
 
-# Copy supervisor config
-COPY scripts/supervisord.conf /etc/supervisord.conf
+# Built frontend (overwrites app/public/)
+COPY --from=frontend-builder /build/dist /app/public
 
-# Copy entrypoint
+# Process manager and entrypoint
+COPY scripts/supervisord.conf /etc/supervisord.conf
 COPY scripts/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Web UI port (local only — map with -p 127.0.0.1:3000:3000)
 EXPOSE 3000
 
 ENTRYPOINT ["/start.sh"]

@@ -1,21 +1,37 @@
-# Tailscale GUI Docker
+# Meshnet Client
 
-A Docker image combining the official `tailscale/tailscale` base with a lightweight Node.js web GUI for controlling the Tailscale client via a browser.
+A Docker image combining the official `tailscale/tailscale` base with a Node.js API and a Vue 3 + Tailwind CSS + Shadcn-vue web GUI for managing a Tailscale/Headscale node via a browser.
 
 ## Structure
 
 ```
-tailscale-gui/
-├── Dockerfile
+meshnet-client/
+├── Dockerfile                          # Multi-stage: builds Vue frontend, then tailscale + node
 ├── docker-compose.yml
 ├── scripts/
-│   ├── supervisord.conf   # Runs tailscaled + node app together
-│   └── start.sh           # Entrypoint
-└── app/
-    ├── package.json
-    ├── server.js          # Express API — shells out to tailscale CLI
-    └── public/
-        └── index.html     # Web GUI
+│   ├── supervisord.conf                # Runs tailscaled + node app
+│   └── start.sh                        # Entrypoint
+├── app/
+│   ├── package.json                    # Express dependencies
+│   ├── server.js                       # Express API — shells out to tailscale CLI
+│   └── public/                         # Built Vue frontend (auto-generated)
+├── frontend/
+│   ├── package.json                    # Vue + Vite + Tailwind + Shadcn-vue
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── src/
+│       ├── App.vue                     # Main layout, state, header
+│       ├── components/
+│       │   ├── StatusPanel.vue         # Status display (dot, state, network, hostname, IPs)
+│       │   ├── ControlsPanel.vue       # Auth key input, toggles (shields, exit node, LAN)
+│       │   ├── PeersPanel.vue          # Peer list
+│       │   ├── LogPanel.vue            # Streaming log output
+│       │   └── ui/                     # Shadcn-vue primitives (Button, Card, Switch, etc.)
+│       └── composables/
+│           ├── useApi.ts               # API fetch helper
+│           ├── useStatus.ts            # Status polling composable
+│           └── useLog.ts               # Log management composable
+└── data/                               # Tailscale state (persisted)
 ```
 
 ## How it works
@@ -25,7 +41,7 @@ tailscale-gui/
 | `tailscale/tailscale` | Base image; provides `tailscaled` daemon + `tailscale` CLI |
 | `supervisord` | Process manager — starts both `tailscaled` and the Node app |
 | `node server.js` | Express server on port 3000; exposes REST endpoints that run CLI commands |
-| `index.html` | Single-page GUI; polls `/api/status` every 15s |
+| `Vue 3 + Tailwind + Shadcn-vue` | SPA frontend; polls `/api/status` every 15s, SSE login flow |
 
 ## Quick Start
 
@@ -38,23 +54,45 @@ open http://localhost:3000
 ```
 
 Then in the GUI:
-1. Paste your **Auth Key** (from https://login.tailscale.com/admin/settings/keys)
-2. Click **Connect**
+1. Click **Login** (web auth flow) or enter an **Auth Key** and click **Connect**
+2. Toggle **Exit Node** / **Local LAN** as needed
 3. Your container is now on your tailnet
+
+## Frontend Development
+
+Run the Vite dev server with hot reload alongside the Dockerized API:
+
+```bash
+# Terminal 1: Start the backend
+docker compose up --build
+
+# Terminal 2: Start the Vue dev server
+cd frontend
+npm run dev
+```
+
+The Vite dev server proxies `/api/*` requests to `localhost:3000`.
+
+To build the frontend for production:
+
+```bash
+cd frontend
+npm run build:local     # Builds to dist/ and copies output to ../app/public/
+```
 
 ## Build without compose
 
 ```bash
-docker build -t tailscale-gui .
+docker build -t meshnet-client .
 
 docker run -d \
-  --name tailscale-gui \
+  --name meshnet-client \
   -p 127.0.0.1:3000:3000 \
   --cap-add NET_ADMIN \
   --cap-add SYS_MODULE \
   --device /dev/net/tun \
-  -v tailscale-state:/var/lib/tailscale \
-  tailscale-gui
+  -v meshnet-state:/var/lib/tailscale \
+  meshnet-client
 ```
 
 ## API Endpoints
@@ -65,18 +103,20 @@ docker run -d \
 | GET | `/api/ip` | Container's Tailscale IP |
 | GET | `/api/version` | Tailscale version |
 | GET | `/api/netcheck` | Network check (DERP, latency) |
-| POST | `/api/up` | `tailscale up` with optional body params |
+| POST | `/api/login` | SSE stream for web auth flow (headscale) |
+| POST | `/api/up` | `tailscale up --reset` with optional body params |
 | POST | `/api/down` | `tailscale down` |
 | POST | `/api/logout` | `tailscale logout` |
 | POST | `/api/ping` | `tailscale ping <host>` |
 
 ### POST /api/up body params
+
 ```json
 {
   "authkey": "tskey-auth-...",
-  "hostname": "my-container",
-  "acceptRoutes": true,
-  "shields": false
+  "shields": false,
+  "exitNode": true,
+  "lanAccess": false
 }
 ```
 
