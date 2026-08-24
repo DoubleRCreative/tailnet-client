@@ -1,0 +1,12 @@
+.git
+.DS_Store
+data
+README.md
+
+# Frontend: builder installs its own deps and produces dist/
+frontend/node_modules
+frontend/dist
+
+# Backend: deps installed in-image; public/ comes from the builder stage only
+app/node_modules
+app/public

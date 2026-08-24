@@ -12,7 +12,7 @@ import ControlsPanel from '@/components/ControlsPanel.vue'
 import PeersPanel from '@/components/PeersPanel.vue'
 import LogPanel from '@/components/LogPanel.vue'
 
-const { status, version, config, refresh } = useStatus()
+const { status, version, config, prefs, refresh } = useStatus()
 const { api } = useApi()
 const { entries, hidden, log, logHtml, clear, toggleHidden } = useLog()
 
@@ -38,13 +38,24 @@ const isRunning = computed(() => status.value?.BackendState === 'Running')
 const isAuthed = computed(() => isRunning.value || status.value?.BackendState === 'Stopped')
 const loginServer = computed(() => config.value?.loginServer ?? null)
 
+const exitNodeAdvertised = computed(() => {
+  const routes = prefs.value?.advertiseRoutes ?? []
+  return routes.includes('0.0.0.0/0') || routes.includes('::/0')
+})
+const lanAccessAdvertised = computed(() => (prefs.value?.advertiseRoutes ?? []).includes('192.168.0.0/16'))
+const exitNodeApproved = computed(() => {
+  const ips = status.value?.Self?.AllowedIPs ?? []
+  return ips.includes('0.0.0.0/0') || ips.includes('::/0')
+})
+const lanAccessApproved = computed(() => (status.value?.Self?.AllowedIPs ?? []).includes('192.168.0.0/16'))
+const exitNodePending = computed(() => exitNodeAdvertised.value && !exitNodeApproved.value)
+const lanAccessPending = computed(() => lanAccessAdvertised.value && !lanAccessApproved.value)
+
 watchEffect(() => {
-  const ips = status.value?.Self?.AllowedIPs
-  if (ips) {
-    exitNode.value = ips.includes('0.0.0.0/0') || ips.includes('::/0')
-    lanAccess.value = ips.includes('192.168.0.0/16')
-  }
-  const shieldsUp = status.value?.Self?.ShieldsUp
+  if (!prefs.value) return
+  exitNode.value = exitNodeAdvertised.value
+  lanAccess.value = lanAccessAdvertised.value
+  const shieldsUp = prefs.value.shieldsUp
   if (shieldsUp !== undefined) shields.value = shieldsUp
 })
 
@@ -226,6 +237,8 @@ async function doLogout() {
               :shields="shields"
               :exit-node="exitNode"
               :lan-access="lanAccess"
+              :exit-node-pending="exitNodePending"
+              :lan-access-pending="lanAccessPending"
               @update:authkey="authkey = $event"
               @update:shields="shields = $event; doSet({ shields: $event })"
               @update:exit-node="exitNode = $event; doSet({ exitNode: $event })"

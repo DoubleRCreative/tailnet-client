@@ -31,11 +31,17 @@ export interface TailscaleStatus {
   Peer?: Record<string, PeerInfo>
 }
 
+export interface PrefsInfo {
+  advertiseRoutes: string[]
+  shieldsUp?: boolean
+}
+
 export function useStatus() {
   const { api } = useApi()
   const status = ref<TailscaleStatus | null>(null)
   const version = ref('')
   const config = ref<{ loginServer: string | null }>({ loginServer: null })
+  const prefs = ref<PrefsInfo | null>(null)
   const error = ref(false)
   let interval: ReturnType<typeof setInterval> | null = null
 
@@ -46,6 +52,9 @@ export function useStatus() {
     } catch {
       error.value = true
     }
+    try {
+      prefs.value = await api<PrefsInfo>('GET', '/api/prefs')
+    } catch {}
   }
 
   async function fetchVersion() {
@@ -70,5 +79,5 @@ export function useStatus() {
     if (interval) clearInterval(interval)
   })
 
-  return { status, version, config, error, refresh }
+  return { status, version, config, prefs, error, refresh }
 }

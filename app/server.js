@@ -4,7 +4,15 @@ const path = require("path");
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  })
+);
 
 const LOGIN_SERVER = process.env.TS_LOGIN_SERVER || "";
 
@@ -18,6 +26,7 @@ const ALLOWED_COMMANDS = {
   netcheck: "tailscale netcheck --format=json",
   version: "tailscale version",
   set: (args) => `tailscale set ${sanitizeSetArgs(args)}`,
+  prefs: "tailscale debug prefs",
 };
 
 function sanitizeArgs(args = {}) {
@@ -151,6 +160,20 @@ app.post("/api/set", async (req, res) => {
     const cmd = ALLOWED_COMMANDS.set(body);
     const result = await runCommand(cmd);
     res.json(result);
+  } catch (e) {
+    res.status(500).json(e);
+  }
+});
+
+// GET /api/prefs
+app.get("/api/prefs", async (req, res) => {
+  try {
+    const { stdout } = await runCommand(ALLOWED_COMMANDS.prefs);
+    const data = JSON.parse(stdout);
+    res.json({
+      advertiseRoutes: Array.isArray(data.AdvertiseRoutes) ? data.AdvertiseRoutes : [],
+      shieldsUp: !!data.ShieldsUp,
+    });
   } catch (e) {
     res.status(500).json(e);
   }

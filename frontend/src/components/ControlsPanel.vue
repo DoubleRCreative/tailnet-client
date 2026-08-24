@@ -9,6 +9,8 @@ defineProps<{
   shields: boolean
   exitNode: boolean
   lanAccess: boolean
+  exitNodePending?: boolean
+  lanAccessPending?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -40,11 +42,17 @@ const emit = defineEmits<{
         <Switch id="shields" :model-value="shields" @update:model-value="emit('update:shields', $event as boolean)" />
       </div>
       <div class="flex items-center justify-between">
-        <Label for="exitNode">Advertise as Exit Node</Label>
+        <div>
+          <Label for="exitNode">Advertise as Exit Node</Label>
+          <div v-if="exitNodePending" class="text-xs text-amber-500">awaiting admin approval</div>
+        </div>
         <Switch id="exitNode" :model-value="exitNode" @update:model-value="emit('update:exitNode', $event as boolean)" />
       </div>
       <div class="flex items-center justify-between">
-        <Label for="lanAccess">Advertise Local LAN (192.168.0.0/16)</Label>
+        <div>
+          <Label for="lanAccess">Advertise Local LAN (192.168.0.0/16)</Label>
+          <div v-if="lanAccessPending" class="text-xs text-amber-500">awaiting admin approval</div>
+        </div>
         <Switch id="lanAccess" :model-value="lanAccess" @update:model-value="emit('update:lanAccess', $event as boolean)" />
       </div>
     </div>

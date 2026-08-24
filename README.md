@@ -99,6 +99,8 @@ docker run -d \
 
 | Method | Path | Description |
 |---|---|---|
+| GET | `/api/config` | Login server config |
+| GET | `/api/prefs` | Advertised settings from `tailscale debug prefs` (routes, shields) |
 | GET | `/api/status` | Full `tailscale status --json` |
 | GET | `/api/ip` | Container's Tailscale IP |
 | GET | `/api/version` | Tailscale version |

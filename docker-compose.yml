@@ -16,10 +16,7 @@ services:
       # TS_AUTHKEY: tskey-auth-xxxx
       - GUI_PORT=3000
       - TS_STATE_DIR=/var/lib/tailscale  # Tells Tailscale where to save state
-      - TS_USERSPACE=false  
+      - TS_USERSPACE=false
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
-    network_mode: host
-    privileged: true
     restart: unless-stopped
