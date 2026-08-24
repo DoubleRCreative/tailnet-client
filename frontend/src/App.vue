@@ -44,6 +44,8 @@ watchEffect(() => {
     exitNode.value = ips.includes('0.0.0.0/0') || ips.includes('::/0')
     lanAccess.value = ips.includes('192.168.0.0/16')
   }
+  const shieldsUp = status.value?.Self?.ShieldsUp
+  if (shieldsUp !== undefined) shields.value = shieldsUp
 })
 
 onMounted(() => {
@@ -74,6 +76,13 @@ async function doUp() {
   const data = await api<{ stdout?: string; stderr?: string; error?: string }>('POST', '/api/up', body)
   log(data.stdout || data.stderr || data.error || JSON.stringify(data))
   setTimeout(refresh, 1500)
+}
+
+async function doSet(patch: Partial<{ shields: boolean; exitNode: boolean; lanAccess: boolean }>) {
+  log(`tailscale set ${Object.keys(patch).join(', ')}…`)
+  const data = await api<{ stdout?: string; stderr?: string; error?: string }>('POST', '/api/set', patch)
+  log(data.stdout || data.stderr || data.error || 'Done')
+  setTimeout(refresh, 1000)
 }
 
 async function doDown() {
@@ -218,9 +227,9 @@ async function doLogout() {
               :exit-node="exitNode"
               :lan-access="lanAccess"
               @update:authkey="authkey = $event"
-              @update:shields="shields = $event"
-              @update:exit-node="exitNode = $event"
-              @update:lan-access="lanAccess = $event"
+              @update:shields="shields = $event; doSet({ shields: $event })"
+              @update:exit-node="exitNode = $event; doSet({ exitNode: $event })"
+              @update:lan-access="lanAccess = $event; doSet({ lanAccess: $event })"
             />
           </CardContent>
         </Card>

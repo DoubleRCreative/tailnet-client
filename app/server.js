@@ -17,6 +17,7 @@ const ALLOWED_COMMANDS = {
   ping: (args) => `tailscale ping ${sanitizeHostname(args.host)}`,
   netcheck: "tailscale netcheck --format=json",
   version: "tailscale version",
+  set: (args) => `tailscale set ${sanitizeSetArgs(args)}`,
 };
 
 function sanitizeArgs(args = {}) {
@@ -32,6 +33,14 @@ function sanitizeArgs(args = {}) {
 
 function sanitizeHostname(h = "") {
   return h.replace(/[^a-zA-Z0-9.\-_]/g, "");
+}
+
+function sanitizeSetArgs(args = {}) {
+  const flags = [];
+  if ("shields" in args) flags.push(`--shields-up=${!!args.shields}`);
+  if ("exitNode" in args) flags.push(`--advertise-exit-node=${!!args.exitNode}`);
+  if ("lanAccess" in args) flags.push(args.lanAccess ? "--advertise-routes=192.168.0.0/16" : "--advertise-routes=");
+  return flags.join(" ");
 }
 
 function runCommand(cmd) {
@@ -125,6 +134,21 @@ app.post("/api/login", (req, res) => {
 app.post("/api/up", async (req, res) => {
   try {
     const cmd = ALLOWED_COMMANDS.up(req.body || {});
+    const result = await runCommand(cmd);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json(e);
+  }
+});
+
+// POST /api/set
+app.post("/api/set", async (req, res) => {
+  const body = req.body || {};
+  if (!("shields" in body) && !("exitNode" in body) && !("lanAccess" in body)) {
+    return res.status(400).json({ error: "no recognized settings: expected shields, exitNode or lanAccess" });
+  }
+  try {
+    const cmd = ALLOWED_COMMANDS.set(body);
     const result = await runCommand(cmd);
     res.json(result);
   } catch (e) {

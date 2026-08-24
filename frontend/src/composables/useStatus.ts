@@ -8,6 +8,7 @@ export interface SelfInfo {
   TailscaleIPs: string[]
   UserID: number
   AllowedIPs: string[]
+  ShieldsUp?: boolean
 }
 
 export interface PeerInfo {

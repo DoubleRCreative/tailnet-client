@@ -105,6 +105,7 @@ docker run -d \
 | GET | `/api/netcheck` | Network check (DERP, latency) |
 | POST | `/api/login` | SSE stream for web auth flow (headscale) |
 | POST | `/api/up` | `tailscale up --reset` with optional body params |
+| POST | `/api/set` | `tailscale set` for live settings changes (shields, exit node, LAN advertise) |
 | POST | `/api/down` | `tailscale down` |
 | POST | `/api/logout` | `tailscale logout` |
 | POST | `/api/ping` | `tailscale ping <host>` |
@@ -119,6 +120,26 @@ docker run -d \
   "lanAccess": false
 }
 ```
+
+### POST /api/set body params
+
+All keys optional; at least one required. Each maps to a `tailscale set` flag:
+
+```json
+{
+  "shields": true,
+  "exitNode": false,
+  "lanAccess": true
+}
+```
+
+| Key | Flag (true) | Flag (false) |
+|---|---|---|
+| `shields` | `--shields-up=true` | `--shields-up=false` |
+| `exitNode` | `--advertise-exit-node=true` | `--advertise-exit-node=false` |
+| `lanAccess` | `--advertise-routes=192.168.0.0/16` | `--advertise-routes=` (clears routes) |
+
+Note: toggling LAN advertise in the GUI only manages `--advertise-routes`; it does not set `--accept-routes`.
 
 ## Security Notes
 
