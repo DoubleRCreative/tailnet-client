@@ -16,10 +16,10 @@ services:
       # TS_AUTHKEY: tskey-auth-xxxx
       - GUI_PORT=3000
       - TS_STATE_DIR=/var/lib/tailscale  # Tells Tailscale where to save state
-      - TS_USERSPACE=false 
-      - TS_LOGIN_SERVER=https://vpn.therameyhome.net
-      - TS_EXTRA_ARGS=--login-server=https://vpn.therameyhome.net    
+      - TS_USERSPACE=false  
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
+    network_mode: host
+    privileged: true
     restart: unless-stopped
