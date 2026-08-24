@@ -1,11 +1,11 @@
-# Meshnet Client
+# Tailnet Client
 
 A Docker image combining the official `tailscale/tailscale` base with a Node.js API and a Vue 3 + Tailwind CSS + Shadcn-vue web GUI for managing a Tailscale/Headscale node via a browser.
 
 ## Structure
 
 ```
-meshnet-client/
+tailnet-client/
 ├── Dockerfile                          # Multi-stage: builds Vue frontend, then tailscale + node
 ├── docker-compose.yml
 ├── scripts/
@@ -83,16 +83,16 @@ npm run build:local     # Builds to dist/ and copies output to ../app/public/
 ## Build without compose
 
 ```bash
-docker build -t meshnet-client .
+docker build -t tailnet-client .
 
 docker run -d \
-  --name meshnet-client \
+  --name tailnet-client \
   -p 127.0.0.1:3000:3000 \
   --cap-add NET_ADMIN \
   --cap-add SYS_MODULE \
   --device /dev/net/tun \
-  -v meshnet-state:/var/lib/tailscale \
-  meshnet-client
+  -v tailnet-state:/var/lib/tailscale \
+  tailnet-client
 ```
 
 ## API Endpoints

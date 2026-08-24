@@ -156,7 +156,7 @@ async function doLogout() {
             🔒
           </div>
           <div>
-            <h1 class="text-xl font-semibold">Meshnet Client</h1>
+            <h1 class="text-xl font-semibold">Tailnet Client</h1>
             <Badge variant="outline" class="text-[10px] px-1.5 py-0 font-normal mt-0.5">
               {{ version || 'Loading…' }}
             </Badge>

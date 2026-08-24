@@ -1,8 +1,8 @@
 services:
-  meshnet-client:
+  tailnet-client:
     build: .
-    container_name: meshnet-client
-    hostname: meshnet-client
+    container_name: tailnet-client
+    hostname: tailnet-client
     # Expose the GUI only on localhost — not to the wider network
     ports:
       - "3000:3000"
