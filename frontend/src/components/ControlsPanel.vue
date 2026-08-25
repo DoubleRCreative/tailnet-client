@@ -2,6 +2,7 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
 
 defineProps<{
   loginServer: string | null
@@ -11,6 +12,9 @@ defineProps<{
   lanAccess: boolean
   exitNodePending?: boolean
   lanAccessPending?: boolean
+  hostnameDraft?: string
+  hostnameSaving?: boolean
+  showHostnameSave?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,6 +22,8 @@ const emit = defineEmits<{
   'update:shields': [value: boolean]
   'update:exitNode': [value: boolean]
   'update:lanAccess': [value: boolean]
+  'update:hostnameDraft': [value: string]
+  saveHostname: []
 }>()
 </script>
 
@@ -35,6 +41,25 @@ const emit = defineEmits<{
         :model-value="authkey"
         @update:model-value="emit('update:authkey', $event as string)"
       />
+    </div>
+    <div class="space-y-2">
+      <Label for="hostname">Hostname</Label>
+      <div class="flex items-center gap-2">
+        <Input
+          id="hostname"
+          placeholder="my-device"
+          :model-value="hostnameDraft"
+          @update:model-value="emit('update:hostnameDraft', $event as string)"
+        />
+        <Button
+          v-if="showHostnameSave"
+          size="sm"
+          :disabled="hostnameSaving"
+          @click="emit('saveHostname')"
+        >
+          {{ hostnameSaving ? 'Saving…' : 'Save' }}
+        </Button>
+      </div>
     </div>
     <div class="space-y-4 pt-2">
       <div class="flex items-center justify-between">

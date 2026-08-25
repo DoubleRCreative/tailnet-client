@@ -23,7 +23,7 @@ tailnet-client/
 │       ├── App.vue                     # Main layout, state, header
 │       ├── components/
 │       │   ├── StatusPanel.vue         # Status display (dot, state, network, hostname, IPs)
-│       │   ├── ControlsPanel.vue       # Auth key input, toggles (shields, exit node, LAN)
+│       │   ├── ControlsPanel.vue       # Auth key, hostname input + save, toggles (shields, exit node, LAN)
 │       │   ├── PeersPanel.vue          # Peer list
 │       │   ├── LogPanel.vue            # Streaming log output
 │       │   └── ui/                     # Shadcn-vue primitives (Button, Card, Switch, etc.)
@@ -140,6 +140,8 @@ All keys optional; at least one required. Each maps to a `tailscale set` flag:
 | `shields` | `--shields-up=true` | `--shields-up=false` |
 | `exitNode` | `--advertise-exit-node=true` | `--advertise-exit-node=false` |
 | `lanAccess` | `--advertise-routes=192.168.0.0/16` | `--advertise-routes=` (clears routes) |
+
+The optional `hostname` key maps to `--hostname=<value>` (DNS label rules: letters, digits, hyphens; max 63 chars; no leading/trailing hyphen). Rejected with 400 otherwise.
 
 Note: toggling LAN advertise in the GUI only manages `--advertise-routes`; it does not set `--accept-routes`.
 

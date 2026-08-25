@@ -24,6 +24,10 @@ const showingControls = ref(false)
 const loginDisabled = ref(false)
 const isDark = ref(true)
 
+const hostnameDraft = ref('')
+const hostnameSaving = ref(false)
+let lastSeenHostname = ''
+
 const self = computed(() => status.value?.Self ?? null)
 const selfUser = computed(() => {
   const id = status.value?.Self?.UserID
@@ -37,6 +41,17 @@ const peers = computed(() => {
 const isRunning = computed(() => status.value?.BackendState === 'Running')
 const isAuthed = computed(() => isRunning.value || status.value?.BackendState === 'Stopped')
 const loginServer = computed(() => config.value?.loginServer ?? null)
+const currentHostname = computed(() => status.value?.Self?.HostName ?? '')
+const HOSTNAME_RE = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
+const showHostnameSave = computed(
+  () => hostnameDraft.value !== currentHostname.value && HOSTNAME_RE.test(hostnameDraft.value)
+)
+
+watchEffect(() => {
+  const cur = currentHostname.value
+  if (hostnameDraft.value === lastSeenHostname) hostnameDraft.value = cur
+  lastSeenHostname = cur
+})
 
 const exitNodeAdvertised = computed(() => {
   const routes = prefs.value?.advertiseRoutes ?? []
@@ -89,11 +104,21 @@ async function doUp() {
   setTimeout(refresh, 1500)
 }
 
-async function doSet(patch: Partial<{ shields: boolean; exitNode: boolean; lanAccess: boolean }>) {
+async function doSet(patch: Partial<{ shields: boolean; exitNode: boolean; lanAccess: boolean; hostname: string }>) {
   log(`tailscale set ${Object.keys(patch).join(', ')}…`)
   const data = await api<{ stdout?: string; stderr?: string; error?: string }>('POST', '/api/set', patch)
   log(data.stdout || data.stderr || data.error || 'Done')
   setTimeout(refresh, 1000)
+}
+
+async function doSaveHostname() {
+  if (!showHostnameSave.value || hostnameSaving.value) return
+  hostnameSaving.value = true
+  try {
+    await doSet({ hostname: hostnameDraft.value })
+  } finally {
+    hostnameSaving.value = false
+  }
 }
 
 async function doDown() {
@@ -239,10 +264,15 @@ async function doLogout() {
               :lan-access="lanAccess"
               :exit-node-pending="exitNodePending"
               :lan-access-pending="lanAccessPending"
+              :hostname-draft="hostnameDraft"
+              :hostname-saving="hostnameSaving"
+              :show-hostname-save="showHostnameSave"
               @update:authkey="authkey = $event"
               @update:shields="shields = $event; doSet({ shields: $event })"
               @update:exit-node="exitNode = $event; doSet({ exitNode: $event })"
               @update:lan-access="lanAccess = $event; doSet({ lanAccess: $event })"
+              @update:hostname-draft="hostnameDraft = $event"
+              @save-hostname="doSaveHostname"
             />
           </CardContent>
         </Card>

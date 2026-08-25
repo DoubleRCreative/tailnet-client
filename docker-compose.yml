@@ -5,7 +5,7 @@ services:
     hostname: tailnet-client
     # Expose the GUI only on localhost — not to the wider network
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       # Persist tailscale state across restarts
       - ./data:/var/lib/tailscale
@@ -19,4 +19,9 @@ services:
       - TS_USERSPACE=false
     cap_add:
       - NET_ADMIN
+      - NET_RAW
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv6.conf.all.forwarding: "1"
+    privileged: true
     restart: unless-stopped
