@@ -19,6 +19,7 @@ const { entries, hidden, log, logHtml, clear, toggleHidden } = useLog()
 const shields = ref(false)
 const exitNode = ref(false)
 const lanAccess = ref(false)
+const ssh = ref(false)
 const authkey = ref('')
 const showingControls = ref(false)
 const loginDisabled = ref(false)
@@ -72,6 +73,8 @@ watchEffect(() => {
   lanAccess.value = lanAccessAdvertised.value
   const shieldsUp = prefs.value.shieldsUp
   if (shieldsUp !== undefined) shields.value = shieldsUp
+  const sshPref = prefs.value.ssh
+  if (sshPref !== undefined) ssh.value = sshPref
 })
 
 onMounted(() => {
@@ -104,7 +107,7 @@ async function doUp() {
   setTimeout(refresh, 1500)
 }
 
-async function doSet(patch: Partial<{ shields: boolean; exitNode: boolean; lanAccess: boolean; hostname: string }>) {
+async function doSet(patch: Partial<{ shields: boolean; ssh: boolean; exitNode: boolean; lanAccess: boolean; hostname: string }>) {
   log(`tailscale set ${Object.keys(patch).join(', ')}…`)
   const data = await api<{ stdout?: string; stderr?: string; error?: string }>('POST', '/api/set', patch)
   log(data.stdout || data.stderr || data.error || 'Done')
@@ -262,6 +265,7 @@ async function doLogout() {
               :shields="shields"
               :exit-node="exitNode"
               :lan-access="lanAccess"
+              :ssh="ssh"
               :exit-node-pending="exitNodePending"
               :lan-access-pending="lanAccessPending"
               :hostname-draft="hostnameDraft"
@@ -269,6 +273,7 @@ async function doLogout() {
               :show-hostname-save="showHostnameSave"
               @update:authkey="authkey = $event"
               @update:shields="shields = $event; doSet({ shields: $event })"
+              @update:ssh="ssh = $event; doSet({ ssh: $event })"
               @update:exit-node="exitNode = $event; doSet({ exitNode: $event })"
               @update:lan-access="lanAccess = $event; doSet({ lanAccess: $event })"
               @update:hostname-draft="hostnameDraft = $event"

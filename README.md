@@ -55,7 +55,7 @@ open http://localhost:3000
 
 Then in the GUI:
 1. Click **Login** (web auth flow) or enter an **Auth Key** and click **Connect**
-2. Toggle **Exit Node** / **Local LAN** as needed
+2. Toggle **Exit Node** / **Local LAN** / **SSH** as needed
 3. Your container is now on your tailnet
 
 ## Frontend Development
@@ -140,6 +140,7 @@ All keys optional; at least one required. Each maps to a `tailscale set` flag:
 | `shields` | `--shields-up=true` | `--shields-up=false` |
 | `exitNode` | `--advertise-exit-node=true` | `--advertise-exit-node=false` |
 | `lanAccess` | `--advertise-routes=192.168.0.0/16` | `--advertise-routes=` (clears routes) |
+| `ssh` | `--ssh=true` | `--ssh=false` |
 
 The optional `hostname` key maps to `--hostname=<value>` (DNS label rules: letters, digits, hyphens; max 63 chars; no leading/trailing hyphen). Rejected with 400 otherwise.
 

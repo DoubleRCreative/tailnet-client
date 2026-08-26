@@ -50,6 +50,7 @@ function sanitizeSetArgs(args = {}) {
   if ("exitNode" in args) flags.push(`--advertise-exit-node=${!!args.exitNode}`);
   if ("lanAccess" in args) flags.push(args.lanAccess ? "--advertise-routes=192.168.0.0/16" : "--advertise-routes=");
   if ("hostname" in args) flags.push(`--hostname=${args.hostname}`);
+  if ("ssh" in args) flags.push(`--ssh=${!!args.ssh}`);
   return flags.join(" ");
 }
 
@@ -160,8 +161,8 @@ app.post("/api/up", async (req, res) => {
 // POST /api/set
 app.post("/api/set", async (req, res) => {
   const body = req.body || {};
-  if (!("shields" in body) && !("exitNode" in body) && !("lanAccess" in body) && !("hostname" in body)) {
-    return res.status(400).json({ error: "no recognized settings: expected shields, exitNode, lanAccess or hostname" });
+  if (!("shields" in body) && !("exitNode" in body) && !("lanAccess" in body) && !("hostname" in body) && !("ssh" in body)) {
+    return res.status(400).json({ error: "no recognized settings: expected shields, exitNode, lanAccess, hostname or ssh" });
   }
   if ("hostname" in body && !validHostname(body.hostname)) {
     return res.status(400).json({ error: "invalid hostname: use letters, digits and hyphens, max 63 chars, no leading/trailing hyphen" });
@@ -183,6 +184,7 @@ app.get("/api/prefs", async (req, res) => {
     res.json({
       advertiseRoutes: Array.isArray(data.AdvertiseRoutes) ? data.AdvertiseRoutes : [],
       shieldsUp: !!data.ShieldsUp,
+      ssh: !!data.RunSSH,
     });
   } catch (e) {
     res.status(500).json(e);

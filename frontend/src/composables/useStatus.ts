@@ -34,6 +34,7 @@ export interface TailscaleStatus {
 export interface PrefsInfo {
   advertiseRoutes: string[]
   shieldsUp?: boolean
+  ssh?: boolean
 }
 
 export function useStatus() {

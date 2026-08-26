@@ -8,6 +8,7 @@ defineProps<{
   loginServer: string | null
   authkey: string
   shields: boolean
+  ssh: boolean
   exitNode: boolean
   lanAccess: boolean
   exitNodePending?: boolean
@@ -20,6 +21,7 @@ defineProps<{
 const emit = defineEmits<{
   'update:authkey': [value: string]
   'update:shields': [value: boolean]
+  'update:ssh': [value: boolean]
   'update:exitNode': [value: boolean]
   'update:lanAccess': [value: boolean]
   'update:hostnameDraft': [value: string]
@@ -65,6 +67,10 @@ const emit = defineEmits<{
       <div class="flex items-center justify-between">
         <Label for="shields">Shields Up</Label>
         <Switch id="shields" :model-value="shields" @update:model-value="emit('update:shields', $event as boolean)" />
+      </div>
+      <div class="flex items-center justify-between">
+        <Label for="ssh">Allow SSH via Tailnet</Label>
+        <Switch id="ssh" :model-value="ssh" @update:model-value="emit('update:ssh', $event as boolean)" />
       </div>
       <div class="flex items-center justify-between">
         <div>
