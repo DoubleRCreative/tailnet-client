@@ -2,10 +2,11 @@ services:
   tailnet-client:
     build: .
     container_name: tailnet-client
-    hostname: tailnet-client
+    hostname: "${HOSTNAME}"
     # Expose the GUI only on localhost — not to the wider network
     ports:
-      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:${PORT:-3000}:3000"
+      - "0.0.0.0:${PORT_SSH:-2222}:2222"
     volumes:
       # Persist tailscale state across restarts
       - ./data:/var/lib/tailscale
@@ -25,3 +26,6 @@ services:
       net.ipv6.conf.all.forwarding: "1"
     privileged: true
     restart: unless-stopped
+
+    # Forward ssh traffic to 2222
+    entrypoint: "${ENTRYPOINT}"
